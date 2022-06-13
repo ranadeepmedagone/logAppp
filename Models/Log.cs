@@ -20,12 +20,12 @@ public record Log
 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 
-    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset UpdatedAt { get; set; } 
 
 
 
 
-    public int UdatedByUserId { get; set; }
+    public int UpdatedByUserId { get; set; } 
 
 
     public bool PartiaLlyDeleted { get; set; }
@@ -38,7 +38,7 @@ public record Log
         StackTrace = StackTrace,
         CreatedAt = CreatedAt,
         UpdatedAt = UpdatedAt,
-        UdatedByUserId = UdatedByUserId,
+        UpdatedByUserId = UpdatedByUserId,
         PartiaLlyDeleted = PartiaLlyDeleted
 
 

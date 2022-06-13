@@ -1,4 +1,5 @@
 using Dapper;
+using logapp.DTOs;
 using logapp.Models;
 using logapp.Repositories;
 using logapp.Utilities;
@@ -7,7 +8,7 @@ namespace logapp.Repositories;
 
 public interface ITagRepository
 {
-    Task<List<Tag>> GetAllTags();
+    Task<List<Tag>> GetAllTags(QTagFilterDTO tagFilter);
     Task<Tag> GetTagById(int Id);
     Task<Tag> CreateTag(Tag Item);
     Task<bool> UpdateTag(Tag Item);
@@ -49,12 +50,32 @@ public class TagRepository : BaseRepository, ITagRepository
             await con.ExecuteAsync(query, new { Id });
     }
 
-    public async Task<List<Tag>> GetAllTags()
+    public async Task<List<Tag>> GetAllTags(QTagFilterDTO tagfilter)
     {
-        var query = $@"SELECT * FROM ""{TableNames.tag}"" ORDER BY created_at DESC";
+        List<Tag> res;
+        var query = $@"SELECT * FROM ""{TableNames.tag}"" ";
 
+
+        if (tagfilter.Name is not null)
+        {
+            query += "WHERE name = @Name";
+        }
+
+
+        // var toAdd = QueryBuilder.AddWhereClauses(whereClauses);
+        // query += toAdd;
+        var paramsObj = new
+        {
+            Name = tagfilter?.Name,
+        };
         using (var con = NewConnection)
-            return (await con.QueryAsync<Tag>(query)).AsList();
+        {
+            res = (await con.QueryAsync<Tag>(query, paramsObj)).AsList();
+        }
+        return (res);
+
+        // using (var con = NewConnection)
+        //     return (await con.QueryAsync<Tag>(query)).AsList();
     }
 
     // public async Task<List<Log>> GetTagLogsById(int Id)

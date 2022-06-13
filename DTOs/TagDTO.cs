@@ -48,6 +48,11 @@ public record CreateTagDTO
 
     public string Name { get; set; }
 
+    [JsonPropertyName("type_id")]
+
+    public int TypeId { get; set; }
+
+
 }
 
 

@@ -62,10 +62,14 @@ public class UserController : ControllerBase
 
     }
 
-    private int GetUserIdFromClaims(IEnumerable<Claim> claims)
-    {
-        return Convert.ToInt32(claims.Where(x => x.Type == UserConstants.Id).First().Value);
-    }
+    // private int GetUserIdFromClaims(IEnumerable<Claim> claims)
+    // {
+    //     return Convert.ToInt32(claims.Where(x => x.Type == UserConstants.Id).First().Value);
+    // }
+
+
+
+
 
     [HttpPost("login")]
     public async Task<ActionResult> Login(
@@ -73,7 +77,7 @@ public class UserController : ControllerBase
     )
     {
 
-
+          
 
         // if(Status.Parse(bool)){}
         var existingUser = await _user.GetByEmail(Data.Email);
@@ -88,6 +92,11 @@ public class UserController : ControllerBase
             return BadRequest("Username or password is incorrect");
 
         var token = Generate(existingUser);
+
+
+
+
+
 
         var res = new UserLoginResDTO
         {
@@ -132,13 +141,13 @@ public class UserController : ControllerBase
 
 
     [HttpGet("{id}")]
-    [Authorize] 
+    [Authorize]
 
     public async Task<ActionResult<UserDTO>> GetUserById([FromRoute] int id)
     {
 
         var IsSuperUser = User.Claims.FirstOrDefault(c => c.Type == UserConstants.IsSuperUser)?.Value;
-        var userId = User.Claims.FirstOrDefault(c => c.Type == UserConstants.Id)?.Value;
+        // var userId = User.Claims.FirstOrDefault(c => c.Type == UserConstants.Id)?.Value;
         // if (IsSuperUser.Trim().ToLower() == "true" || u)
         if (bool.Parse(IsSuperUser))
         {
@@ -236,15 +245,15 @@ public class UserController : ControllerBase
 
 
 
-    // [HttpDelete("{id}")]
-    // public async Task<ActionResult> DeleteUser([FromRoute] int id)
-    // {
-    //     var existing = await _user.GetUserById(id);
-    //     if (existing is null)
-    //         return NotFound("No user found with given user name");
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteUser([FromRoute] int id)
+    {
+        var existing = await _user.GetUserById(id);
+        if (existing is null)
+            return NotFound("No user found with given user name");
 
-    //     var didDelete = _user.DeleteUser(id);
+        var didDelete = _user.DeleteUser(id);
 
-    //     return NoContent();
-    // }
+        return NoContent();
+    }
 }

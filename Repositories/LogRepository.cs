@@ -7,11 +7,11 @@ namespace logapp.Repositories;
 
 public interface ILogRepository
 {
-    Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter, String tagtypename = null);
+    Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter);
     Task<Log> GetLogById(int Id);
     Task<Log> CreateLog(Log Item);
     Task<bool> UpdateLog(Log Item);
-    Task DeleteLog(int Id);
+    Task<bool> DeleteLog(int Id);
 
     Task<List<Tag>> GetLogTagsById(int Id);
     // Task<List<User>> LogUpdatedByUser(int id);
@@ -22,6 +22,8 @@ public interface ILogRepository
 
 public class LogRepository : BaseRepository, ILogRepository
 {
+    // public bool PartiallyDelete { get; private set; } 
+
     public LogRepository(IConfiguration config) : base(config)
     {
 
@@ -41,21 +43,40 @@ public class LogRepository : BaseRepository, ILogRepository
         }
     }
 
-    public async Task DeleteLog(int Id)
+    public async Task<bool> DeleteLog(int Id)
     {
-        var query = $@"DELETE FROM ""{TableNames.log}"" WHERE id = @Id";
+        // var query = $@"DELETE FROM ""{TableNames.log}"" WHERE id = @Id";
+
+
+
+        var query = $@"UPDATE ""{TableNames.log}"" SET partially_deleted = true  WHERE id = @Id";
+
 
         using (var con = NewConnection)
-            await con.ExecuteAsync(query, new { Id });
+        {
+            var rowCount = await con.ExecuteAsync(query, new { Id });
+
+            if (rowCount == 1)
+            {
+              var  query1= $@"DELETE FROM ""{TableNames.log}"" WHERE  updated_at <= now() - INTERVAL '90 days' ";
+                await con.ExecuteAsync(query1, new { Id });
+            }
+
+        }
+        
+
+
+
     }
 
-    public async Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter, String tagtypename = null)
+    public async Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter)
     {
         List<Log> res;
 
 
 
         var query = $@"SELECT * FROM ""{TableNames.log}"" ";
+
 
 
         if (dateFilter is not null && (dateFilter.FromDate.HasValue || dateFilter.ToDate.HasValue))
@@ -65,12 +86,24 @@ public class LogRepository : BaseRepository, ILogRepository
             query += "WHERE created_at BETWEEN  @FromDate AND  @ToDate";
         }
 
+        // if (search is not null)
+        // {
+        //     query +=  "WHERE  title LIKE '%val%'";
+        // }
+
+
         // var toAdd = QueryBuilder.AddWhereClauses(whereClauses);
         // query += toAdd;
         var paramsObj = new
         {
+            //  search = search.ToString(),
+            // Search = search.Search,
+            // Description = search.Description,
+            // StacTrace = search.StackTrace,
+
             FromDate = dateFilter?.FromDate,
             ToDate = dateFilter?.ToDate,
+
         };
         using (var con = NewConnection)
         {
@@ -101,7 +134,7 @@ public class LogRepository : BaseRepository, ILogRepository
 
     public async Task<bool> UpdateLog(Log Item)
     {
-        var query = $@"UPDATE ""{TableNames.log}"" SET description = @Description WHERE id = @Id";
+        var query = $@"UPDATE ""{TableNames.log}"" SET description = @Description, updated_at = now(), updated_by_user_id = @UpdatedByUserId  WHERE id = @Id";
 
 
         using (var con = NewConnection)

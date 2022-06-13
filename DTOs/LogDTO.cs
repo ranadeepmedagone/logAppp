@@ -6,7 +6,7 @@ namespace logapp.DTOs;
 
 public record LogDTO
 {
-
+    public static bool PartiallyDeleted { get; internal set; }
     [JsonPropertyName("log_id")]
     public long Id { get; set; }
 
@@ -36,7 +36,7 @@ public record LogDTO
 
     [JsonPropertyName("updated_by_user_id")]
 
-    public int UdatedByUserId { get; set; }
+    public int UpdatedByUserId { get; set; }
 
     [JsonPropertyName("partially_deleted")]
 
@@ -79,17 +79,33 @@ public record CreateLogDTO
 
 public record UpdateLogDTO
 {
-
-
+    
 
     [JsonPropertyName("description")]
 
     public string Description { get; set; }
 
+
     
 
 
 }
+
+
+public record DeleteLogDTO
+{
+
+
+
+    [JsonPropertyName("partially_deleted")]
+
+    public bool PartiallyDeleted { get; set; }
+
+
+}
+
+
+
 
 
 

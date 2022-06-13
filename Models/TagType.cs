@@ -9,7 +9,7 @@ public record TagType{
 
     public string TypeName { get; set; }
 
-     public TagTypeDTO asDto => new TagTypeDTO
+    public TagTypeDTO asDto => new TagTypeDTO
     {
         // Id = Id,
         TypeName = TypeName,

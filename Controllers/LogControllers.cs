@@ -21,6 +21,8 @@ public class LogController : ControllerBase
     private readonly ILogRepository _Log;
     private readonly ITagRepository _Tag;
 
+    // public bool PartiaLlyDeleted { get; private set; }
+
     public LogController(ILogger<LogController> logger,
     ILogRepository Log, ITagRepository Tag)
     {
@@ -33,9 +35,11 @@ public class LogController : ControllerBase
 
     [HttpGet]
 
-    public async Task<ActionResult<List<LogDTO>>> GetAllLogs([FromQuery] QDateFilterDTO dateFilter = null, String tagtypename = null)
+
+
+    public async Task<ActionResult<List<LogDTO>>> GetAllLogs([FromQuery] QDateFilterDTO dateFilter = null)
     {
-        var LogsList = await _Log.GetAllLogs(dateFilter, tagtypename);
+        var LogsList = await _Log.GetAllLogs(dateFilter);
         //  await _Tag.GetAllLogsByTagName( TypeName);
 
 
@@ -63,6 +67,7 @@ public class LogController : ControllerBase
         if (res is null)
             return NotFound("No Log found with given id");
         var dto = res.asDto;
+        // dto.UpdatedByUserId = Id;
         dto.ListOfTags = (await _Log.GetLogTagsById(id)).Select(x => x.asDto).ToList();
         // dto.UpdatedByUser = (await _Log.LogUpdatedByUser(id)).Select(x => x.asDto).ToList();
 
@@ -109,15 +114,18 @@ public class LogController : ControllerBase
     public async Task<ActionResult> UpdateLog([FromRoute] int id,
     [FromBody] UpdateLogDTO Data)
     {
+        var Id = GetUserIdFromClaims(User.Claims);
 
         var existing = await _Log.GetLogById(id);
-        var currentUserId = GetCurrentUserId();
+        // var userId = User.Claims.FirstOrDefault(c => c.Type == UserConstants.Id)?.Value;
+        // var userid = int.Parse(userId);
+        // var currentUserId = GetCurrentUserId();
         await _Tag.GetTagById(id);
 
         //    await _Tag.UpdateTagByLog();
 
-        // var userId = User.Claims.FirstOrDefault(c => c.Type == UserConstants.Id)?.Value;
-        // var userid = int.Parse(userId);
+
+
 
 
         if (existing is null)
@@ -126,8 +134,7 @@ public class LogController : ControllerBase
         var toUpdateLog = existing with
         {
             Description = Data.Description?.Trim() ?? existing.Description,
-            UdatedByUserId = currentUserId
-
+            UpdatedByUserId = Id,
 
         };
 
@@ -144,9 +151,14 @@ public class LogController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> DeleteLog([FromRoute] int id)
     {
+
+        // if (PartiaLlyDeleted == false)
+        //     return BadRequest("User not found");
         var existing = await _Log.GetLogById(id);
         if (existing is null)
             return NotFound("No Log found with given Log name");
+
+
 
         var didDelete = _Log.DeleteLog(id);
 
@@ -155,16 +167,15 @@ public class LogController : ControllerBase
 
 
 
-    // private int GetUserIdFromClaims(IEnumerable<Claim> claims)
-    // {
-    //     return Convert.ToInt32(claims.Where(x => x.Type == UserConstants.Id).First().Value);
-    // }
-
-    private int GetCurrentUserId()
+    private int GetUserIdFromClaims(IEnumerable<Claim> claims)
     {
-        var userClaims = User.Claims;
-
-        return Int16.Parse(userClaims.FirstOrDefault(c => c.Type == UserConstants.Id)?.Value);
+        return Convert.ToInt32(claims.Where(x => x.Type == UserConstants.Id).First().Value);
     }
+
+    // private int GetCurrentUserId()
+    // {
+
+    //     return Int32.Parse(User.Claims.FirstOrDefault(c => c.Type == UserConstants.Id)?.Value);
+    // }
 
 }

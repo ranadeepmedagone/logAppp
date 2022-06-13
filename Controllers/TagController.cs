@@ -3,6 +3,7 @@
 using Microsoft.AspNetCore.Mvc;
 using logapp.Models;
 using logapp.Repositories;
+using logapp.DTOs;
 
 namespace logapp.Controllers;
 
@@ -12,7 +13,7 @@ namespace logapp.Controllers;
 
 
 public class TagController : ControllerBase
-{ 
+{
 
     private readonly ILogger<TagController> _Tagger;
     private readonly ITagRepository _Tag;
@@ -28,9 +29,9 @@ public class TagController : ControllerBase
 
     [HttpGet]
 
-    public async Task<ActionResult<List<TagDTO>>> GetAllTags()
+    public async Task<ActionResult<List<TagDTO>>> GetAllTags([FromQuery] QTagFilterDTO tagFilter = null)
     {
-        var TagsList = await _Tag.GetAllTags();
+        var TagsList = await _Tag.GetAllTags(tagFilter);
 
         // Tag -> TagDTO
         var dtoList = TagsList.Select(x => x.asDto);
@@ -53,7 +54,7 @@ public class TagController : ControllerBase
         dto.TagTypes = (await _Tag.GetTagTypesByTagId(id)).Select(x => x.asDto).ToList();
 
 
-        
+
 
         return Ok(dto);
     }
@@ -70,7 +71,8 @@ public class TagController : ControllerBase
         var toCreateTag = new Tag
         {
             Name = Data.Name.Trim(),
-            
+            TypeId = Data.TypeId,
+
         };
 
         var createdTag = await _Tag.CreateTag(toCreateTag);
