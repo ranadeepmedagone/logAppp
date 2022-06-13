@@ -148,22 +148,22 @@ public class LogController : ControllerBase
 
 
 
-    [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteLog([FromRoute] int id)
-    {
+    // [HttpDelete("{id}")]
+    // public async Task<ActionResult> DeleteLog([FromRoute] int id)
+    // {
 
-        // if (PartiaLlyDeleted == false)
-        //     return BadRequest("User not found");
-        var existing = await _Log.GetLogById(id);
-        if (existing is null)
-            return NotFound("No Log found with given Log name");
+    //     // if (PartiaLlyDeleted == false)
+    //     //     return BadRequest("User not found");
+    //     var existing = await _Log.GetLogById(id);
+    //     if (existing is null)
+    //         return NotFound("No Log found with given Log name");
 
 
 
-        var didDelete = _Log.DeleteLog(id);
+    //     var didDelete = _Log.DeleteLog(id);
 
-        return NoContent();
-    }
+    //     return NoContent();
+    // }
 
 
 

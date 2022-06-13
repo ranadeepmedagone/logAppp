@@ -50,7 +50,7 @@ public class TagController : ControllerBase
             return NotFound("No Tag found with given id");
 
         var dto = res.asDto;
-        // dto.ListOfLogs = (await _Tag.GetTagLogsById(id)).Select(x => x.asDto).ToList();
+        dto.ListOfLogs = (await _Tag.GetTagLogsById(id)).Select(x => x.asDto).ToList();
         dto.TagTypes = (await _Tag.GetTagTypesByTagId(id)).Select(x => x.asDto).ToList();
 
 
