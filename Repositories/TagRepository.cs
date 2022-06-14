@@ -80,7 +80,7 @@ public class TagRepository : BaseRepository, ITagRepository
 
     public async Task<List<Log>> GetTagLogsById(int Id)
     {
-        var query = $@"SELECT * FROM ""{TableNames.log}"" l LEFT JOIN ""{TableNames.log_tag}"" lt ON lt.tag_id = l.id  WHERE  lt.log_id = @Id ";
+        var query = $@"SELECT * FROM ""{TableNames.log}"" l LEFT JOIN ""{TableNames.log_tag}"" lt ON lt.log_id = l.id  WHERE  lt.tag_id = @Id ";
 
         using (var con = NewConnection)
         {

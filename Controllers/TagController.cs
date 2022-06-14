@@ -17,12 +17,14 @@ public class TagController : ControllerBase
 
     private readonly ILogger<TagController> _Tagger;
     private readonly ITagRepository _Tag;
+    private readonly ILogRepository _Log;
 
     public TagController(ILogger<TagController> Tagger,
-    ITagRepository Tag)
+    ITagRepository Tag,ILogRepository Log)
     {
         _Tagger = Tagger;
         _Tag = Tag;
+        _Log = Log;
     }
 
 

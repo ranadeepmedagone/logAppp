@@ -11,7 +11,7 @@ public interface ILogRepository
     Task<Log> GetLogById(int Id);
     Task<Log> CreateLog(Log Item);
     Task<bool> UpdateLog(Log Item);
-    // Task<bool> DeleteLog(int Id);
+    Task<bool> DeleteLog(int Id);
 
     Task<List<Tag>> GetLogTagsById(int Id);
     // Task<List<User>> LogUpdatedByUser(int id);
@@ -43,37 +43,41 @@ public class LogRepository : BaseRepository, ILogRepository
         }
     }
 
-    // public async Task<bool> DeleteLog(int Id)
-    // {
-    //     // var query = $@"DELETE FROM ""{TableNames.log}"" WHERE id = @Id";
+    public async Task<bool> DeleteLog(int Id)
+    {
+        // var query = $@"DELETE FROM ""{TableNames.log}"" WHERE id = @Id";
 
 
 
-    //     var query = $@"UPDATE ""{TableNames.log}"" SET partially_deleted = true  WHERE id = @Id";
+        var query = $@"UPDATE ""{TableNames.log}"" SET partially_deleted = true  WHERE id = @Id";
+       
 
+        using (var con = NewConnection)
+        {
+            var rowCount = await con.ExecuteAsync(query, new { Id });
 
-    //     using (var con = NewConnection)
-    //     {
-    //         var rowCount = await con.ExecuteAsync(query, new { Id });
+            if (rowCount == 1)
+            {
+              var  query1= $@"DELETE FROM ""{TableNames.log}"" WHERE  updated_at <= now() - INTERVAL '90 days' ";
+                await con.ExecuteAsync(query1, new { Id });
+               
+            }
+             return rowCount == 1;
+            
 
-    //         if (rowCount == 1)
-    //         {
-    //           var  query1= $@"DELETE FROM ""{TableNames.log}"" WHERE  updated_at <= now() - INTERVAL '90 days' ";
-    //             await con.ExecuteAsync(query1, new { Id });
-    //         }
-
-    //     }
-    //     return Ok;
+        }
+        // return ();
+        
         
 
 
 
-    // }
+    }
 
     public async Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter)
     {
         List<Log> res;
-
+  
 
 
         var query = $@"SELECT * FROM ""{TableNames.log}"" ";
