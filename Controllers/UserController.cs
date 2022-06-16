@@ -77,7 +77,7 @@ public class UserController : ControllerBase
     )
     {
 
-          
+
 
         // if(Status.Parse(bool)){}
         var existingUser = await _user.GetByEmail(Data.Email);

@@ -8,9 +8,10 @@ namespace logapp.Repositories;
 public interface ILogRepository
 {
     Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter);
+    Task<List<Log>> GetAllLogsforUser(QDateFilterDTO dateFilter);
     Task<Log> GetLogById(int Id);
     Task<Log> CreateLog(Log Item);
-    Task<bool> UpdateLog(Log Item);
+    Task<bool> UpdateLog(Log Item, List<int> tags);
     Task<bool> DeleteLog(int Id);
 
     Task<List<Tag>> GetLogTagsById(int Id);
@@ -50,7 +51,7 @@ public class LogRepository : BaseRepository, ILogRepository
 
 
         var query = $@"UPDATE ""{TableNames.log}"" SET partially_deleted = true  WHERE id = @Id";
-       
+
 
         using (var con = NewConnection)
         {
@@ -58,17 +59,17 @@ public class LogRepository : BaseRepository, ILogRepository
 
             if (rowCount == 1)
             {
-              var  query1= $@"DELETE FROM ""{TableNames.log}"" WHERE  updated_at <= now() - INTERVAL '90 days' ";
+                var query1 = $@"DELETE FROM ""{TableNames.log}"" WHERE  updated_at <= now() - INTERVAL '90 days' ";
                 await con.ExecuteAsync(query1, new { Id });
-               
+
             }
-             return rowCount == 1;
-            
+            return rowCount == 1;
+
 
         }
         // return ();
-        
-        
+
+
 
 
 
@@ -77,7 +78,7 @@ public class LogRepository : BaseRepository, ILogRepository
     public async Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter)
     {
         List<Log> res;
-  
+
 
 
         var query = $@"SELECT * FROM ""{TableNames.log}"" ";
@@ -137,17 +138,26 @@ public class LogRepository : BaseRepository, ILogRepository
             return await con.QuerySingleOrDefaultAsync<Log>(query, new { Id = Id });
     }
 
-    public async Task<bool> UpdateLog(Log Item)
+    public async Task<bool> UpdateLog(Log Item, List<int> tags)
     {
         var query = $@"UPDATE ""{TableNames.log}"" SET description = @Description, updated_at = now(), updated_by_user_id = @UpdatedByUserId  WHERE id = @Id";
-
+        var logTagDelete = $@"DELETE FROM ""{TableNames.log_tag}"" WHERE log_id = @Id";
+        var logTagUpdate = $@"INSERT INTO ""{TableNames.log_tag}"" (log_id, tag_id) VALUES(@LogId, @TagId)";
 
         using (var con = NewConnection)
-        {
-            var rowCount = await con.ExecuteAsync(query, Item);
-
-            return rowCount == 1;
-        }
+            if ((await con.ExecuteAsync(query, Item)) > 0)
+            {
+                if ((await con.ExecuteAsync(logTagDelete, new { Id = Item.Id })) > 0)
+                {
+                    foreach (var tagId in tags)
+                        await con.QuerySingleOrDefaultAsync(logTagUpdate, new { LogId = Item.Id, TagId = tagId });
+                    return true;
+                }
+                else
+                    return false;
+            }
+            else
+                return false;
     }
 
     // public async Task<List<User>> LogUpdatedByUser(int id)
@@ -173,6 +183,14 @@ public class LogRepository : BaseRepository, ILogRepository
             var res = await con.QuerySingleOrDefaultAsync(query, new { UserId = Id, LogId = id });
 
         }
+    }
+
+    public async Task<List<Log>> GetAllLogsforUser(QDateFilterDTO dateFilter)
+    {
+        var query = $@"SELECT * FROM ""{TableNames.log}"" WHERE partially_deleted = false";
+
+        using (var con = NewConnection)
+            return (await con.QueryAsync<Log>(query)).AsList();
     }
 
     // public async Task<List<LogSeen>> LogSeen(int id)

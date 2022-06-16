@@ -39,17 +39,33 @@ public class LogController : ControllerBase
 
     public async Task<ActionResult<List<LogDTO>>> GetAllLogs([FromQuery] QDateFilterDTO dateFilter = null)
     {
-        var LogsList = await _Log.GetAllLogs(dateFilter);
-        //  await _Tag.GetAllLogsByTagName( TypeName);
+
+        var IsSuperUser = User.Claims.FirstOrDefault(c => c.Type == UserConstants.IsSuperUser)?.Value;
+        var userId = User.Claims.FirstOrDefault(c => c.Type == UserConstants.Id)?.Value;
+        var Id = int.Parse(userId);
+        if (bool.Parse(IsSuperUser))
+        {
+            var LogsList = await _Log.GetAllLogs(dateFilter);
+
+            var dtoList = LogsList.Select(x => x.asDto);
+
+            return Ok(dtoList);
+        }
+        if (bool.Parse(IsSuperUser) == false)
+        {
+
+            var LogsList = await _Log.GetAllLogsforUser(dateFilter);
+
+            var dtoList = LogsList.Select(x => x.asDto);
+
+            return Ok(dtoList);
+        }
+        else
+        {
+            return BadRequest("logs not found");
+        }
 
 
-
-
-
-        // Log -> LogDTO
-        var dtoList = LogsList.Select(x => x.asDto);
-
-        return Ok(dtoList);
     }
 
 
@@ -117,17 +133,9 @@ public class LogController : ControllerBase
         var Id = GetUserIdFromClaims(User.Claims);
 
         var existing = await _Log.GetLogById(id);
-        // var userId = User.Claims.FirstOrDefault(c => c.Type == UserConstants.Id)?.Value;
-        // var userid = int.Parse(userId);
-        // var currentUserId = GetCurrentUserId();
-        await _Tag.GetTagById(id);
+
 
         //    await _Tag.UpdateTagByLog();
-
-
-
-
-
         if (existing is null)
             return NotFound("No Log found with given id");
 
@@ -138,7 +146,7 @@ public class LogController : ControllerBase
 
         };
 
-        var didUpdate = await _Log.UpdateLog(toUpdateLog);
+        var didUpdate = await _Log.UpdateLog(toUpdateLog, Data.Tags);
 
         if (!didUpdate)
             return StatusCode(StatusCodes.Status500InternalServerError, "Could not update Log");

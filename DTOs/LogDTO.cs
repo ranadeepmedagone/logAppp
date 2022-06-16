@@ -79,14 +79,17 @@ public record CreateLogDTO
 
 public record UpdateLogDTO
 {
-    
+
 
     [JsonPropertyName("description")]
 
     public string Description { get; set; }
+    [JsonPropertyName("tags")]
+
+    public List<int> Tags { get; set; }
 
 
-    
+
 
 
 }
