@@ -8,7 +8,7 @@ namespace logapp.Repositories;
 public interface ILogRepository
 {
     Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter);
-    Task<List<Log>> GetAllLogsforUser(QDateFilterDTO dateFilter);
+    Task<List<Log>> GetAllLogsforUser(int Id, QDateFilterDTO dateFilter);
     Task<Log> GetLogById(int Id);
     Task<Log> CreateLog(Log Item);
     Task<bool> UpdateLog(Log Item, List<int> tags);
@@ -185,12 +185,12 @@ public class LogRepository : BaseRepository, ILogRepository
         }
     }
 
-    public async Task<List<Log>> GetAllLogsforUser(QDateFilterDTO dateFilter)
+    public async Task<List<Log>> GetAllLogsforUser(int Id, QDateFilterDTO dateFilter)
     {
-        var query = $@"SELECT * FROM ""{TableNames.log}"" WHERE partially_deleted = false";
+        var query = $@"SELECT * FROM ""{TableNames.log}"" WHERE partially_deleted = false AND id =@Id";
 
         using (var con = NewConnection)
-            return (await con.QueryAsync<Log>(query)).AsList();
+            return (await con.QueryAsync<Log>(query, new { id = Id })).AsList();
     }
 
     // public async Task<List<LogSeen>> LogSeen(int id)
