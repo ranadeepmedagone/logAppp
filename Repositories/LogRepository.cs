@@ -7,7 +7,7 @@ namespace logapp.Repositories;
 
 public interface ILogRepository
 {
-    Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter);
+    Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter, QTitleFilterDTO titleFilter);
     Task<List<Log>> GetAllLogsforUser(int Id, QDateFilterDTO dateFilter);
     Task<Log> GetLogById(int Id);
     Task<Log> CreateLog(Log Item);
@@ -75,7 +75,7 @@ public class LogRepository : BaseRepository, ILogRepository
 
     }
 
-    public async Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter)
+    public async Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter, QTitleFilterDTO titleFilter)
     {
         List<Log> res;
 
@@ -92,14 +92,15 @@ public class LogRepository : BaseRepository, ILogRepository
             query += "WHERE created_at BETWEEN  @FromDate AND  @ToDate";
         }
 
-        // if (search is not null)
-        // {
-        //     query +=  "WHERE  title LIKE '%val%'";
-        // }
+        if (titleFilter.Title is not null)
+        {
+            query += "WHERE title = @Title";
+        }
 
 
         // var toAdd = QueryBuilder.AddWhereClauses(whereClauses);
         // query += toAdd;
+
         var paramsObj = new
         {
             //  search = search.ToString(),
@@ -107,6 +108,7 @@ public class LogRepository : BaseRepository, ILogRepository
             // Description = search.Description,
             // StacTrace = search.StackTrace,
             // title = title?.ToString(),
+            Title = titleFilter?.Title,
             FromDate = dateFilter?.FromDate,
             ToDate = dateFilter?.ToDate,
 
