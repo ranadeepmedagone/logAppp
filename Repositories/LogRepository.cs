@@ -106,7 +106,7 @@ public class LogRepository : BaseRepository, ILogRepository
             // Search = search.Search,
             // Description = search.Description,
             // StacTrace = search.StackTrace,
-
+            // title = title?.ToString(),
             FromDate = dateFilter?.FromDate,
             ToDate = dateFilter?.ToDate,
 
@@ -147,6 +147,7 @@ public class LogRepository : BaseRepository, ILogRepository
         using (var con = NewConnection)
             if ((await con.ExecuteAsync(query, Item)) > 0)
             {
+                if (tags is null) return true;
                 if ((await con.ExecuteAsync(logTagDelete, new { Id = Item.Id })) > 0)
                 {
                     foreach (var tagId in tags)

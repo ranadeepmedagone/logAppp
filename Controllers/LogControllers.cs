@@ -54,7 +54,7 @@ public class LogController : ControllerBase
         if (bool.Parse(IsSuperUser) == false)
         {
 
-            var LogsList = await _Log.GetAllLogsforUser(Id,dateFilter);
+            var LogsList = await _Log.GetAllLogsforUser(Id, dateFilter);
 
             var dtoList = LogsList.Select(x => x.asDto);
 
