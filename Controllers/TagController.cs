@@ -20,7 +20,7 @@ public class TagController : ControllerBase
     private readonly ILogRepository _Log;
 
     public TagController(ILogger<TagController> Tagger,
-    ITagRepository Tag,ILogRepository Log)
+    ITagRepository Tag, ILogRepository Log)
     {
         _Tagger = Tagger;
         _Tag = Tag;
@@ -31,9 +31,9 @@ public class TagController : ControllerBase
 
     [HttpGet]
 
-    public async Task<ActionResult<List<TagDTO>>> GetAllTags([FromQuery] QTagFilterDTO tagFilter = null)
+    public async Task<ActionResult<List<TagDTO>>> GetAllTags()
     {
-        var TagsList = await _Tag.GetAllTags(tagFilter);
+        var TagsList = await _Tag.GetAllTags();
 
         // Tag -> TagDTO
         var dtoList = TagsList.Select(x => x.asDto);

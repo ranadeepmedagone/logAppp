@@ -7,8 +7,8 @@ namespace logapp.Repositories;
 
 public interface ILogRepository
 {
-    Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter, QTitleFilterDTO titleFilter);
-    Task<List<Log>> GetAllLogsforUser(int Id, QDateFilterDTO dateFilter);
+    Task<List<Log>> GetAllLogs(int Id, int? tagId = null, string title = null, DateTime? from = null, DateTime? to = null);
+    Task<List<Log>> GetAllLogsforUser(int Id, int? tagId, string title = null, DateTime? from = null, DateTime? to = null);
     Task<Log> GetLogById(int Id);
     Task<Log> CreateLog(Log Item);
     Task<bool> UpdateLog(Log Item, List<int> tags);
@@ -57,12 +57,12 @@ public class LogRepository : BaseRepository, ILogRepository
         {
             var rowCount = await con.ExecuteAsync(query, new { Id });
 
-            if (rowCount == 1)
-            {
-                var query1 = $@"DELETE FROM ""{TableNames.log}"" WHERE  updated_at <= now() - INTERVAL '90 days' ";
-                await con.ExecuteAsync(query1, new { Id });
+            // if (rowCount == 1)
+            // {
+            //     var query1 = $@"DELETE FROM ""{TableNames.log}"" WHERE  updated_at <= now() - INTERVAL '90 days' ";
+            //     await con.ExecuteAsync(query1, new { Id });
 
-            }
+            // }
             return rowCount == 1;
 
 
@@ -73,53 +73,31 @@ public class LogRepository : BaseRepository, ILogRepository
 
 
 
+
     }
 
-    public async Task<List<Log>> GetAllLogs(QDateFilterDTO dateFilter, QTitleFilterDTO titleFilter)
+    public async Task<List<Log>> GetAllLogs(int Id, int? tagId, string title = null, DateTime? from = null, DateTime? to = null)
     {
-        List<Log> res;
-
-
+        // List<Log> res;
 
         var query = $@"SELECT * FROM ""{TableNames.log}"" ";
 
+        // query += $@"SELECT * FROM ""{TableNames.log}""  WHERE ";
+        //         SELECT * FROM "log"
+        // WHERE title LIKE '%error%';
+        Console.WriteLine(title);
 
 
-        if (dateFilter is not null && (dateFilter.FromDate.HasValue || dateFilter.ToDate.HasValue))
-        {
-            if (dateFilter.FromDate is null) dateFilter.FromDate = DateTimeOffset.MinValue;
-            if (dateFilter.ToDate is null) dateFilter.ToDate = DateTimeOffset.Now;
-            query += "WHERE created_at BETWEEN  @FromDate AND  @ToDate";
-        }
+        if (title is not null)
+            query = query + $@" WHERE title ILIKE CONCAT('%',@title,'%') ";
 
-        if (titleFilter.Title is not null)
-        {
-            query += "WHERE title = @Title";
-        }
+        if (from is not null && to is not null)
+            query = query + @" WHERE created_at BETWEEN @FromDate AND @ToDate ";
 
-
-        // var toAdd = QueryBuilder.AddWhereClauses(whereClauses);
-        // query += toAdd;
-
-        var paramsObj = new
-        {
-            //  search = search.ToString(),
-            // Search = search.Search,
-            // Description = search.Description,
-            // StacTrace = search.StackTrace,
-            // title = title?.ToString(),
-            Title = titleFilter?.Title,
-            FromDate = dateFilter?.FromDate,
-            ToDate = dateFilter?.ToDate,
-
-        };
+        // query = query + @" NOT l.partially_deleted = true ORDER BY l.created_at LIMIT @Limit OFFSET @Offset";
         using (var con = NewConnection)
-        {
-            res = (await con.QueryAsync<Log>(query, paramsObj)).AsList();
-        }
-        return (res);
+            return (await con.QueryAsync<Log>(query, new { title, FromDate = from, ToDate = to })).AsList();
     }
-
     public async Task<List<Tag>> GetLogTagsById(int Id)
     {
         // SELECT * FROM tag t LEFT JOIN log_tag lt ON lt.tag_id  = t.id  where lt.log_id = 1
@@ -188,12 +166,24 @@ public class LogRepository : BaseRepository, ILogRepository
         }
     }
 
-    public async Task<List<Log>> GetAllLogsforUser(int Id, QDateFilterDTO dateFilter)
+    public async Task<List<Log>> GetAllLogsforUser(int Id, int? tagId, string title = null, DateTime? from = null, DateTime? to = null)
     {
-        var query = $@"SELECT * FROM ""{TableNames.log}"" WHERE partially_deleted = false AND id =@Id";
+        var query = $@"SELECT l.* FROM {TableNames.user_tag} ut
+         LEFT JOIN {TableNames.log} l ON l.tag_id = ut.tag_id
+         WHERE ut.user_id = @UserId AND";
+        // var query = $@"SELECT l.* FROM {TableNames.user_tag} ut
+        //  LEFT JOIN {TableNames.log_tag} lt ON lt.tag_id = ut.tag_id
+        //  LEFT JOIN {TableNames.log} l ON l.id = lt.log_id
+        //  WHERE ut.user_id = @UserId ";
+        if (title is not null)
+            query = query + $@" l.title LIKE '%{title}%' AND";
+
+        if (from is not null && to is not null)
+            query = query + @" l.created_at BETWEEN @FromDate AND @ToDate AND";
+        query = query + @" NOT l.partially_deleted = true ORDER BY l.created_at";
 
         using (var con = NewConnection)
-            return (await con.QueryAsync<Log>(query, new { id = Id })).AsList();
+            return (await con.QueryAsync<Log>(query, new { Title = title, FromDate = from, ToDate = to, Id = Id })).AsList();
     }
 
     // public async Task<List<LogSeen>> LogSeen(int id)

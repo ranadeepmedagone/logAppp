@@ -8,7 +8,7 @@ namespace logapp.Repositories;
 
 public interface ITagRepository
 {
-    Task<List<Tag>> GetAllTags(QTagFilterDTO tagFilter);
+    Task<List<Tag>> GetAllTags();
     Task<Tag> GetTagById(int Id);
     Task<Tag> CreateTag(Tag Item);
     Task<bool> UpdateTag(Tag Item);
@@ -50,27 +50,21 @@ public class TagRepository : BaseRepository, ITagRepository
             await con.ExecuteAsync(query, new { Id });
     }
 
-    public async Task<List<Tag>> GetAllTags(QTagFilterDTO tagfilter)
+    public async Task<List<Tag>> GetAllTags()
     {
         List<Tag> res;
         var query = $@"SELECT * FROM ""{TableNames.tag}"" ";
 
 
-        if (tagfilter.Name is not null)
-        {
-            query += "WHERE name = @Name";
-        }
+
 
 
         // var toAdd = QueryBuilder.AddWhereClauses(whereClauses);
         // query += toAdd;
-        var paramsObj = new
-        {
-            Name = tagfilter?.Name,
-        };
+
         using (var con = NewConnection)
         {
-            res = (await con.QueryAsync<Tag>(query, paramsObj)).AsList();
+            res = (await con.QueryAsync<Tag>(query)).AsList();
         }
         return (res);
 

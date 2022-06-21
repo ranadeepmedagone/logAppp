@@ -37,7 +37,7 @@ public class LogController : ControllerBase
 
 
 
-    public async Task<ActionResult<List<LogDTO>>> GetAllLogs([FromQuery] QDateFilterDTO dateFilter = null, [FromQuery] QTitleFilterDTO titleFilter = null)
+    public async Task<ActionResult<List<LogDTO>>> GetAllLogs([FromQuery] string title = null, [FromQuery] int? tag = null, DateTime? from = null, DateTime? to = null)
     {
 
         var IsSuperUser = User.Claims.FirstOrDefault(c => c.Type == UserConstants.IsSuperUser)?.Value;
@@ -45,7 +45,7 @@ public class LogController : ControllerBase
         var Id = int.Parse(userId);
         if (bool.Parse(IsSuperUser))
         {
-            var LogsList = await _Log.GetAllLogs(dateFilter, titleFilter);
+            var LogsList = await _Log.GetAllLogs(Id, tag, title, from, to);
 
             var dtoList = LogsList.Select(x => x.asDto);
 
@@ -54,7 +54,7 @@ public class LogController : ControllerBase
         if (bool.Parse(IsSuperUser) == false)
         {
 
-            var LogsList = await _Log.GetAllLogsforUser(Id, dateFilter);
+            var LogsList = await _Log.GetAllLogsforUser(Id, tag, title, from, to);
 
             var dtoList = LogsList.Select(x => x.asDto);
 
